@@ -247,13 +247,16 @@ a:hover {
     display: flex;
     list-style: none;
     align-items: center;
-    gap: var(--spacing-md);
+    justify-content: flex-end;
+    gap: clamp(0.65rem, 1.2vw, var(--spacing-md));
+    row-gap: var(--spacing-xs);
 }
 
 .nav-links a {
     color: var(--clr-text-light);
     font-weight: 500;
     font-size: 0.95rem;
+    white-space: nowrap;
 }
 
 .nav-links a:hover {
@@ -803,6 +806,8 @@ footer a:hover {
 @media (max-width: 992px) {
     h1 { font-size: 2.2rem; }
     h2 { font-size: 1.7rem; }
+    .navbar .container { align-items: flex-start; }
+    .nav-links { flex-wrap: wrap; }
     .hero-split { flex-direction: column; }
     .hero-half { padding: var(--spacing-lg) var(--spacing-md); }
     .footer-grid { grid-template-columns: 1fr 1fr; }
