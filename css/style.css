@@ -183,6 +183,14 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: var(--spacing-md);
+}
+
+.nav-brand-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 0 0 auto;
 }
 
 .logo {
@@ -197,6 +205,42 @@ a:hover {
 
 .logo span {
     color: var(--clr-accent-gold);
+}
+
+.nav-accreditation {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    transition: var(--transition-smooth);
+}
+
+.nav-accreditation:hover {
+    transform: translateY(-1px);
+}
+
+.nav-accreditation img {
+    display: block;
+    object-fit: contain;
+}
+
+.nav-accreditation-icaew {
+    width: 48px;
+    height: 48px;
+    background: #ffffff;
+    border-radius: var(--radius-sm);
+    padding: 5px;
+    box-shadow: var(--shadow-sm);
+}
+
+.nav-accreditation-icaew img {
+    width: 38px;
+    height: 38px;
+}
+
+.nav-accreditation-acca img {
+    width: 44px;
+    height: 44px;
 }
 
 .nav-links {
@@ -375,49 +419,6 @@ a:hover {
     color: rgba(247, 249, 251, 0.8);
     margin-bottom: var(--spacing-lg);
     font-size: 1.1rem;
-}
-
-/* Hero Accreditations Positioning */
-.hero-badge-left {
-    position: absolute;
-    top: var(--spacing-md);
-    left: var(--spacing-md);
-    z-index: 10;
-}
-
-.hero-badge-right {
-    position: absolute;
-    top: var(--spacing-md);
-    right: var(--spacing-md);
-    z-index: 10;
-}
-
-.hero-logo-img {
-    display: block;
-    transition: var(--transition-smooth);
-    border-radius: var(--radius-sm);
-    background: #ffffff;
-    object-fit: contain;
-    padding: 8px;
-    width: 165px;
-    height: 72px;
-    box-shadow: var(--shadow-md);
-}
-
-.hero-logo-img:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-
-@media (max-width: 992px) {
-    .hero-badge-left {
-        top: var(--spacing-sm);
-        left: var(--spacing-sm);
-    }
-    .hero-badge-right {
-        top: var(--spacing-sm);
-        right: var(--spacing-sm);
-    }
 }
 
 /* Trust Strip */
