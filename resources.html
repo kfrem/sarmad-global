@@ -57,7 +57,7 @@
                     </ul>
                 </li>
                 <li><a href="about.html">About Us</a></li>
-                <li><a href="pricing.html">Pricing</a></li>
+                <li><a href="pricing.html">Packages</a></li>
                 <li><a href="resources.html" style="color: var(--clr-accent-gold);">Resources</a></li>
                 <li><a href="contact.html" class="btn btn-outline" style="padding: 0.4rem 1rem;">Book Consultation</a></li>
             </ul>
@@ -90,7 +90,7 @@
                 
                 <!-- Interactive Calculator Form -->
                 <div class="calc-container">
-                    <h3 style="color: var(--clr-accent-gold); text-align: center; margin-bottom: var(--spacing-md);">Calculate Firm ROI</h3>
+                    <h3 style="color: var(--clr-accent-gold); text-align: center; margin-bottom: var(--spacing-md);">Calculate Practice Capacity</h3>
                     <form id="roi-calculator-form">
                         <div class="form-group">
                             <label for="calc-clients" class="form-label">Total Active Practice Clients</label>
@@ -100,18 +100,18 @@
                             <label for="calc-onboardings" class="form-label">Average New Clients Onboarded Per Month</label>
                             <input type="number" id="calc-onboardings" class="form-control" placeholder="e.g. 5" required min="1">
                         </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-xs);">Calculate Time & Cost Savings</button>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-xs);">Calculate Time Savings</button>
                     </form>
                     
                     <!-- Calculator Results Output Box -->
                     <div id="calc-results" class="calc-result">
-                        <h4 style="color: var(--clr-primary-dark); margin-bottom: var(--spacing-xs); font-family: var(--font-body); font-weight: 700;">Calculated Practice Savings:</h4>
+                        <h4 style="color: var(--clr-primary-dark); margin-bottom: var(--spacing-xs); font-family: var(--font-body); font-weight: 700;">Calculated Practice Capacity:</h4>
                         <ul style="list-style: none; font-size: 0.95rem; line-height: 1.8;">
                             <li>✔ Saved Administrative Time: <strong id="res-hours-month">0.0</strong> Hours / month</li>
                             <li>✔ Reclaimed Strategic Time: <strong id="res-hours-year">0</strong> Hours / year</li>
-                            <li>✔ Saved Blended Cost Value: <strong id="res-value-year">£0</strong> / year</li>
+                            <li>? Proposal Impact: <strong id="res-value-year">Discuss in consultation</strong></li>
                         </ul>
-                        <p style="font-size: 0.8rem; color: var(--clr-text-muted); margin-top: var(--spacing-xs); margin-bottom: 0;">*Calculations are based on a blended professional rate of £120 per hour.</p>
+                        <p style="font-size: 0.8rem; color: var(--clr-text-muted); margin-top: var(--spacing-xs); margin-bottom: 0;">*Commercial impact depends on your workflow, client mix, and advisory model, and is discussed privately during consultation.</p>
                     </div>
                 </div>
             </div>

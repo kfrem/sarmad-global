@@ -51,7 +51,6 @@ function setupRoiCalculator() {
         // Retrieve inputs
         const activeClients = parseFloat(document.getElementById('calc-clients').value) || 0;
         const monthlyOnboardings = parseFloat(document.getElementById('calc-onboardings').value) || 0;
-        const hourlyRate = 120; // Factual average blended professional hourly rate (£)
 
         // Calculations based on real practice efficiency statistics:
         // Manual onboarding average: 4.5 hours per client (compliance, engagement, billing setup, chasers)
@@ -59,18 +58,13 @@ function setupRoiCalculator() {
         // Time saved per client = 4.0 hours
         const hoursSavedPerMonth = monthlyOnboardings * 4.0;
         const hoursSavedPerYear = hoursSavedPerMonth * 12;
-        const financialValueSavedPerYear = hoursSavedPerYear * hourlyRate;
 
         // Render results dynamically
         const resultContainer = document.getElementById('calc-results');
         if (resultContainer) {
             document.getElementById('res-hours-month').textContent = hoursSavedPerMonth.toFixed(1);
             document.getElementById('res-hours-year').textContent = hoursSavedPerYear.toFixed(0);
-            document.getElementById('res-value-year').textContent = financialValueSavedPerYear.toLocaleString('en-GB', {
-                style: 'currency',
-                currency: 'GBP',
-                maximumFractionDigits: 0
-            });
+            document.getElementById('res-value-year').textContent = 'Discuss in consultation';
             
             resultContainer.style.display = 'block';
             resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
