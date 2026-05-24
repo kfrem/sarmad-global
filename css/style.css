@@ -39,7 +39,7 @@
     --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    
+
     /* Animation Transitions */
     --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -183,7 +183,7 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: clamp(0.85rem, 1.6vw, var(--spacing-lg));
 }
 
 .nav-brand-group {
@@ -225,22 +225,22 @@ a:hover {
 }
 
 .nav-accreditation-icaew {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
     background: #ffffff;
     border-radius: var(--radius-sm);
-    padding: 5px;
+    padding: 7px;
     box-shadow: var(--shadow-sm);
 }
 
 .nav-accreditation-icaew img {
-    width: 38px;
-    height: 38px;
+    width: 50px;
+    height: 50px;
 }
 
 .nav-accreditation-acca img {
-    width: 44px;
-    height: 44px;
+    width: 60px;
+    height: 60px;
 }
 
 .nav-links {
@@ -250,6 +250,7 @@ a:hover {
     justify-content: flex-end;
     gap: clamp(0.65rem, 1.2vw, var(--spacing-md));
     row-gap: var(--spacing-xs);
+    flex: 1 1 auto;
 }
 
 .nav-links a {
@@ -332,6 +333,19 @@ a:hover {
 .btn-outline:hover {
     background-color: var(--clr-accent-gold);
     color: var(--clr-primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-whatsapp {
+    background-color: #25d366;
+    color: #0d131a;
+    border: 1px solid #25d366;
+    padding: 0.4rem 1rem;
+}
+
+.btn-whatsapp:hover {
+    background-color: #1fb457;
+    color: #0d131a;
     transform: translateY(-2px);
 }
 
@@ -806,8 +820,11 @@ footer a:hover {
 @media (max-width: 992px) {
     h1 { font-size: 2.2rem; }
     h2 { font-size: 1.7rem; }
-    .navbar .container { align-items: flex-start; }
+    .navbar .container { align-items: flex-start; flex-wrap: wrap; }
     .nav-links { flex-wrap: wrap; }
+    .nav-accreditation-icaew { width: 56px; height: 56px; padding: 6px; }
+    .nav-accreditation-icaew img { width: 44px; height: 44px; }
+    .nav-accreditation-acca img { width: 52px; height: 52px; }
     .hero-split { flex-direction: column; }
     .hero-half { padding: var(--spacing-lg) var(--spacing-md); }
     .footer-grid { grid-template-columns: 1fr 1fr; }

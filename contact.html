@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Our London Office & Secure Portal | Sarmad Global</title>
     <meta name="description" content="Reach our London office, book a 30-minute consultation via our booking tool, or upload tax documents to our encrypted client portal.">
-    <link rel="stylesheet" href="css/style.css?v=0967f0e-nav">
+    <link rel="stylesheet" href="css/style.css?v=whatsapp-logos">
 </head>
 <body>
 
@@ -25,6 +25,9 @@
     <!-- Main Navigation Bar -->
     <nav class="navbar">
         <div class="container">
+            <a href="https://www.icaew.com/" class="nav-accreditation nav-accreditation-icaew" aria-label="ICAEW" target="_blank" rel="noopener">
+                <img src="assets/logos/icaew-logo.jpg" alt="ICAEW logo">
+            </a>
             <a href="index.html" class="logo">
                 Sarmad<span>Global</span>
             </a>
@@ -42,13 +45,13 @@
                 <li><a href="pricing.html">Packages</a></li>
                 <li><a href="resources.html">Resources</a></li>
                 <li><a href="about.html">About</a></li>
-                <li><a href="contact.html" class="btn btn-outline" style="padding: 0.4rem 1rem;" style="color: var(--clr-accent-gold);">Contact</a></li>
-                <li>
-                    <a href="https://www.accaglobal.com/" class="nav-accreditation nav-accreditation-acca" aria-label="ACCA" target="_blank" rel="noopener">
-                        <img src="assets/logos/acca-logo.svg" alt="ACCA logo">
-                    </a>
-                </li>
+                <li><a href="contact.html" class="btn btn-outline" style="padding: 0.4rem 1rem; color: var(--clr-accent-gold);">Contact</a></li>
+                <li><a href="https://wa.me/447903416966?text=Hello%20Sarmad%20Global%2C%20I%20would%20like%20to%20discuss%20your%20services." class="btn btn-whatsapp" target="_blank" rel="noopener">WhatsApp</a></li>
             </ul>
+
+            <a href="https://www.accaglobal.com/" class="nav-accreditation nav-accreditation-acca" aria-label="ACCA" target="_blank" rel="noopener">
+                <img src="assets/logos/acca-logo.svg" alt="ACCA logo">
+            </a>
         </div>
     </nav>
 
@@ -72,7 +75,7 @@
                 <div>
                     <h2>Get In Touch</h2>
                     <p style="margin-bottom: var(--spacing-md);">Whether you are looking for corporate compliance support or wish to modernise your accountancy workflows, our specialists are ready to discuss your roadmap.</p>
-                    
+
                     <div style="margin-bottom: var(--spacing-md); line-height: 1.8;">
                         <p><strong>Direct Phone:</strong>Phone: 020 8646 3666</p>
                         <p><strong>Solutions Email:</strong>Email: sarmad.accountant@yahoo.com</p>
@@ -104,7 +107,7 @@
                     <h2>Secure Document Upload Portal</h2>
                     <p style="font-size: 1.05rem;">To satisfy GDPR and client confidentiality standards, please do not email sensitive accounting spreadsheets or personal identification documents. Use our encrypted transfer tunnel below.</p>
                 </div>
-                
+
                 <div style="max-width: 600px; margin: 0 auto;">
                     <!-- Drag & Drop Zone -->
                     <div class="upload-zone" id="secure-dropzone">
@@ -113,7 +116,7 @@
                         <p style="font-size: 0.8rem; color: var(--clr-text-muted); margin-top: var(--spacing-xs);">Supports PDF, XLSX, CSV, or ZIP files up to 50MB. All transfers are protected by bank-grade AES-256 encryption.</p>
                         <input type="file" id="secure-file-input" style="display: none;" accept=".pdf,.xlsx,.csv,.zip">
                     </div>
-                    
+
                     <!-- Sim Upload Progress Output -->
                     <div id="upload-status"></div>
                 </div>
