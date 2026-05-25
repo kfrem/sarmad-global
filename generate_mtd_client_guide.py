@@ -24,7 +24,9 @@ DOWNLOADS = r"C:\Users\kfrem\Downloads"
 SITE_DOWNLOADS = os.path.join(ROOT, "assets", "downloads")
 
 CLIENT_PDF = os.path.join(SITE_DOWNLOADS, "sarmad-global-mtd-client-guide.pdf")
-PRACTICE_PDF = os.path.join(SITE_DOWNLOADS, "sarmad-global-mtd-practice-guide.pdf")
+WHITE_LABEL_PDF = os.path.join(SITE_DOWNLOADS, "mtd-client-guide-for-practices-white-label.pdf")
+PRACTICE_PDF = os.path.join(SITE_DOWNLOADS, "sarmad-global-mtd-practice-implementation-guide.pdf")
+LEGACY_PRACTICE_PDF = os.path.join(SITE_DOWNLOADS, "sarmad-global-mtd-practice-guide.pdf")
 
 NAVY = colors.HexColor("#0D131A")
 INK = colors.HexColor("#1D2533")
@@ -335,16 +337,19 @@ COMMON_SOURCES = [
 
 
 AGENT_SOURCES = COMMON_SOURCES + [
-    ("HMRC agent toolkit", "https://www.gov.uk/guidance/get-ready-for-mtd-an-agent-toolkit/understanding-making-tax-digital-for-income-tax"),
+    ("HMRC agent toolkit", "https://www.gov.uk/guidance/get-ready-for-mtd-an-agent-toolkit"),
+    ("Agent toolkit: planning", "https://www.gov.uk/guidance/get-ready-for-mtd-an-agent-toolkit/planning"),
+    ("Agent toolkit: preparing your practice", "https://www.gov.uk/guidance/get-ready-for-mtd-an-agent-toolkit/preparing-your-practice"),
+    ("Agent toolkit: preparing your clients", "https://www.gov.uk/guidance/get-ready-for-mtd-an-agent-toolkit/preparing-your-clients"),
     ("Add client authorisations", "https://www.gov.uk/guidance/add-your-client-authorisations-for-making-tax-digital-for-income-tax"),
     ("Sign up your client", "https://www.gov.uk/guidance/sign-up-your-client-for-making-tax-digital-for-income-tax/"),
     ("Access MTD after sign-up", "https://www.gov.uk/guidance/use-making-tax-digital-for-income-tax/access-your-new-making-tax-digital-for-income-tax-service-after-you-sign-up"),
 ]
 
 
-def client_story():
+def public_client_story():
     story = [
-        CoverBlock(A4[0] - 52 * mm, A4[1] - 48 * mm, "CLIENT GUIDE", "Making Tax Digital\nfor Income Tax", "A plain-English guide for sole traders and landlords", "Sarmad Global client edition"),
+        CoverBlock(A4[0] - 52 * mm, A4[1] - 48 * mm, "CLIENT GUIDE", "Making Tax Digital\nfor Income Tax", "A plain-English guide for sole traders and landlords", "Sarmad Global public and client edition"),
         PageBreak(),
         P("Making Tax Digital: the simple client guide", "SectionTitle"),
         P("Making Tax Digital for Income Tax is HMRC's move from once-a-year reporting to digital record keeping and regular updates through compatible software. This guide explains what changes, what records you need, and how to avoid last-minute pressure."),
@@ -418,43 +423,130 @@ def client_story():
                 [P("Messy records", "TableCell"), P("We clean, code and reconcile data so it is ready for quarterly review.", "TableCell")],
                 [P("Software uncertainty", "TableCell"), P("We work with common bookkeeping and bridging software and can advise on a practical setup.", "TableCell")],
                 [P("Deadline pressure", "TableCell"), P("We set quarterly action dates and prepare figures before HMRC deadlines.", "TableCell")],
-                [P("Practice support", "TableCell"), P("Accounting practices can share this guide with clients and contact us for MTD setup, data-cleaning and software workflow help.", "TableCell")],
+                [P("No time to manage it", "TableCell"), P("We can provide bookkeeping support so your data is clean before quarterly deadlines.", "TableCell")],
             ],
             [55 * mm, 110 * mm],
         ),
-        PageBreak(),
-        P("Make this guide your own", "SectionTitle"),
-        P("Accounting practices may use this client guide as a client education handout. Enter your firm details below before sharing it with clients. The guide should still be checked against your own advice process and client engagement terms."),
-        FirmDetailsForm("client"),
-        Spacer(1, 8 * mm),
-        callout("For further assistance with MTD readiness, bookkeeping data clean-up, software workflows or quarterly reporting, contact Sarmad Global: sarmad.accountant@yahoo.com | 020 8646 3666 | sarmadglobal.finaccord.pro", GREEN),
         PageBreak(),
         P("HMRC sources used", "SectionTitle"),
         P("This guide is based on official HMRC and GOV.UK guidance available on 25 May 2026:", "Body"),
         sources_table(COMMON_SOURCES),
         Spacer(1, 7 * mm),
         P("This document is a plain-English client guide. It is not a substitute for tailored tax advice. Filing duties can depend on income level, business structure, property income, exemptions, software choices and HMRC updates.", "Small"),
+        Spacer(1, 8 * mm),
+        callout("For further assistance with MTD readiness, bookkeeping data clean-up, software workflows or quarterly reporting, contact Sarmad Global: sarmad.accountant@yahoo.com | 020 8646 3666 | sarmadglobal.finaccord.pro", GREEN),
+    ]
+    return story
+
+
+def white_label_client_story():
+    story = [
+        CoverBlock(A4[0] - 52 * mm, A4[1] - 48 * mm, "CLIENT HANDOUT", "Making Tax Digital\nfor Income Tax", "A client-friendly guide for accounting practices to brand and share", "White-label practice edition"),
+        PageBreak(),
+        P("Making Tax Digital: client briefing", "SectionTitle"),
+        P("This guide is prepared for accounting practices to share with their own clients. It explains Making Tax Digital for Income Tax in plain English without turning the document into a Sarmad Global sales document."),
+        callout("Practice use: enter your firm details in the editable section near the end before sharing this PDF with clients. This keeps the relationship between your practice and your client clear."),
+        Spacer(1, 5 * mm),
+        P("The client message", "SubTitle"),
+        bullet_list(
+            [
+                "MTD changes the routine for record keeping and reporting.",
+                "Affected sole traders and landlords will need digital records and compatible software.",
+                "Quarterly updates are summaries of income and expenses, not full tax returns.",
+                "The final tax return still deals with final adjustments and other income.",
+                "Clients should send records early so the practice can review, correct and submit on time.",
+            ]
+        ),
+        Spacer(1, 5 * mm),
+        P("Who is affected and when?", "SubTitle"),
+        info_table(
+            [
+                [P("Start date", "TableHead"), P("Who joins", "TableHead"), P("Client action", "TableHead")],
+                [P("6 April 2026", "TableCell"), P("Qualifying self-employment and property income over GBP50,000.", "TableCell"), P("Move to digital records and quarterly update routine.", "TableCell")],
+                [P("6 April 2027", "TableCell"), P("Qualifying income over GBP30,000.", "TableCell"), P("Prepare software and records before the start date.", "TableCell")],
+                [P("6 April 2028", "TableCell"), P("Qualifying income over GBP20,000.", "TableCell"), P("Expect more small businesses and landlords to join.", "TableCell")],
+            ],
+            [31 * mm, 73 * mm, 61 * mm],
+        ),
+        PageBreak(),
+        P("The quarterly cycle", "SectionTitle"),
+        FlowChart(
+            [
+                ("Keep records up to date", "Sales, rent, purchases and expenses are captured digitally."),
+                ("Send records to your accountant", "Bank, receipt and invoice information is provided before the internal deadline."),
+                ("Practice reviews the figures", "The practice checks categories, missing items and unusual transactions."),
+                ("Approve the quarterly update", "The client approves the summary before it is sent."),
+                ("Finalise after year end", "The final tax return is completed with adjustments and other income."),
+            ]
+        ),
+        PageBreak(),
+        P("Quarterly deadlines", "SectionTitle"),
+        info_table(
+            [
+                [P("HMRC deadline", "TableHead"), P("Standard period", "TableHead"), P("Calendar period", "TableHead"), P("Suggested client deadline", "TableHead")],
+                [P("7 August", "TableCell"), P("6 April to 5 July", "TableCell"), P("1 April to 30 June", "TableCell"), P("25 July", "TableCell")],
+                [P("7 November", "TableCell"), P("6 April to 5 October", "TableCell"), P("1 April to 30 September", "TableCell"), P("25 October", "TableCell")],
+                [P("7 February", "TableCell"), P("6 April to 5 January", "TableCell"), P("1 April to 31 December", "TableCell"), P("25 January", "TableCell")],
+                [P("7 May", "TableCell"), P("6 April to 5 April", "TableCell"), P("1 April to 31 March", "TableCell"), P("25 April", "TableCell")],
+            ],
+            [33 * mm, 44 * mm, 48 * mm, 40 * mm],
+        ),
+        Spacer(1, 7 * mm),
+        callout("Your practice can change the suggested client deadline to match your own workflow. The HMRC filing deadlines should not be changed."),
+        Spacer(1, 7 * mm),
+        P("What clients should send", "SubTitle"),
+        bullet_list(
+            [
+                "Bank statements, bank feeds, sales records and rent records.",
+                "Purchase invoices, receipts, expense records and mileage details.",
+                "Notes for private expenses, loans, asset purchases, cash transactions and unusual items.",
+                "Payroll, pension and VAT information if relevant.",
+            ]
+        ),
+        PageBreak(),
+        P("Make this guide your own", "SectionTitle"),
+        P("Enter your practice details below before sharing this document with clients. This page is designed so the client sees your practice as the originator of the guidance."),
+        FirmDetailsForm("white_label_client"),
+        Spacer(1, 8 * mm),
+        P("Prepared with technical support from Sarmad Global. This wording may be retained or removed according to your practice preference.", "Small"),
+        PageBreak(),
+        P("HMRC sources used", "SectionTitle"),
+        P("This guide is based on official HMRC and GOV.UK guidance available on 25 May 2026:", "Body"),
+        sources_table(COMMON_SOURCES),
+        Spacer(1, 7 * mm),
+        P("This is a client education document. Practices should adapt it to their engagement terms, service model and client communication policy.", "Small"),
     ]
     return story
 
 
 def practice_story():
     story = [
-        CoverBlock(A4[0] - 52 * mm, A4[1] - 48 * mm, "PRACTICE GUIDE", "MTD for Income Tax\nPractice Readiness", "A practical guide for accountants, bookkeepers and practice teams", "Sarmad Global practice edition"),
+        CoverBlock(A4[0] - 52 * mm, A4[1] - 48 * mm, "PRACTICE GUIDE", "MTD for Income Tax\nImplementation", "A detailed implementation guide for accountants and practice teams", "Sarmad Global practice implementation edition"),
         PageBreak(),
         P("MTD for practices: what changes operationally", "SectionTitle"),
         P("Making Tax Digital for Income Tax changes Self Assessment from an annual production cycle into a recurring digital record, quarterly update and year-end finalisation workflow. For practices, the key risk is not only tax technical accuracy; it is capacity, data quality, client discipline and software control."),
-        callout("Practices can share the companion client guide with their own clients. The PDF contains editable firm details so the guide can carry your practice name and contact details before being sent out."),
+        callout("This guide is for the accounting practice itself. Use it to plan implementation, decide your service model, brief staff, and convert HMRC guidance into a manageable operating process."),
         Spacer(1, 5 * mm),
         P("Client segmentation", "SubTitle"),
         info_table(
             [
-                [P("Segment", "TableHead"), P("Action for the practice", "TableHead"), P("Operational risk", "TableHead")],
-                [P("Over GBP50,000", "TableCell"), P("Prepare for mandatory start from 6 April 2026.", "TableCell"), P("High risk if records are annual or spreadsheet-only without bridging.", "TableCell")],
-                [P("Over GBP30,000", "TableCell"), P("Plan migration for 6 April 2027.", "TableCell"), P("Client education and software transition need time.", "TableCell")],
-                [P("Over GBP20,000", "TableCell"), P("Build into 2028 capacity planning.", "TableCell"), P("Lower-fee clients may create disproportionate quarterly workload.", "TableCell")],
+                [P("Segment", "TableHead"), P("Practice action", "TableHead"), P("Operational risk", "TableHead")],
+                [P("Over GBP50,000", "TableCell"), P("Confirm mandation for 6 April 2026, software route, authorisation and quarterly service level.", "TableCell"), P("High risk if records are annual, mixed between systems, or still spreadsheet-only without controlled bridging.", "TableCell")],
+                [P("Over GBP30,000", "TableCell"), P("Build into 2027 migration plan and start client education early.", "TableCell"), P("Clients may delay because the start date feels distant.", "TableCell")],
+                [P("Over GBP20,000", "TableCell"), P("Model 2028 capacity and pricing now, especially for smaller landlords and sole traders.", "TableCell"), P("Lower-fee clients can consume disproportionate bookkeeping and query time.", "TableCell")],
             ],
             [35 * mm, 67 * mm, 63 * mm],
+        ),
+        Spacer(1, 7 * mm),
+        P("Segmentation data to capture", "SubTitle"),
+        bullet_list(
+            [
+                "Qualifying income by self-employment and property source before expenses.",
+                "Business type, number of income sources and whether UK or foreign property is involved.",
+                "Current records: cloud ledger, desktop software, spreadsheet, paper, bank statements only, or mixed records.",
+                "Current agent position: main agent, supporting agent, legacy authorisation only, or no authorisation.",
+                "Client appetite: self-managed, practice-managed bookkeeping, hybrid, or likely exemption/support case.",
+            ]
         ),
         PageBreak(),
         P("The practice workflow", "SubTitle"),
@@ -491,6 +583,18 @@ def practice_story():
                 "A mixed model, with clear rules on which clients are client-maintained and which are firm-maintained.",
             ]
         ),
+        Spacer(1, 7 * mm),
+        P("Software decision rules", "SubTitle"),
+        info_table(
+            [
+                [P("Client profile", "TableHead"), P("Suggested route", "TableHead"), P("Control required", "TableHead")],
+                [P("Digitally confident client", "TableCell"), P("Client-maintained cloud bookkeeping.", "TableCell"), P("Monthly review checklist, locked categories and evidence of quarterly approval.", "TableCell")],
+                [P("Low-volume landlord", "TableCell"), P("Spreadsheet plus compatible bridging, or simple ledger.", "TableCell"), P("Standardised template, digital links where required, and clear source record storage.", "TableCell")],
+                [P("Messy annual records", "TableCell"), P("Practice-managed bookkeeping or clean-up project before mandation.", "TableCell"), P("Upfront data repair, bank reconciliation and recurring record collection dates.", "TableCell")],
+                [P("Multiple trades/properties", "TableCell"), P("Structured ledger with separate income sources.", "TableCell"), P("Source-by-source quarterly review and finalisation workflow.", "TableCell")],
+            ],
+            [43 * mm, 55 * mm, 67 * mm],
+        ),
         PageBreak(),
         P("Quarterly update process for teams", "SectionTitle"),
         P("Quarterly updates are summaries sent through compatible software. HMRC guidance also explains that the updates are cumulative from the start of the tax year to the end of the update period. That means the firm needs a reliable recurring review process rather than a once-a-year correction exercise."),
@@ -506,6 +610,31 @@ def practice_story():
         ),
         Spacer(1, 6 * mm),
         callout("A practice should treat MTD as a recurring compliance product: client list, software route, monthly data hygiene, quarterly review, approval evidence and submission record."),
+        PageBreak(),
+        P("Service model and pricing decisions", "SectionTitle"),
+        P("MTD creates repeated touchpoints. Practices should avoid treating the work as a small add-on to the annual tax return. Decide in advance what is included, what is chargeable, and what happens when a client sends poor records late."),
+        info_table(
+            [
+                [P("Service model", "TableHead"), P("Includes", "TableHead"), P("Best for", "TableHead")],
+                [P("Client-maintained records", "TableCell"), P("Software setup, quarterly review, submission and year-end finalisation.", "TableCell"), P("Organised clients comfortable with software.", "TableCell")],
+                [P("Practice-managed records", "TableCell"), P("Bookkeeping, reconciliation, quarterly update, evidence trail and final tax return data.", "TableCell"), P("Clients with weak record keeping or no internal finance support.", "TableCell")],
+                [P("Hybrid model", "TableCell"), P("Client captures documents; practice codes, reconciles and files.", "TableCell"), P("Clients willing to upload records but not maintain a ledger.", "TableCell")],
+                [P("Implementation project", "TableCell"), P("Software selection, migration, training, template setup and first-quarter supervision.", "TableCell"), P("Practices and clients moving from annual records to digital workflows.", "TableCell")],
+            ],
+            [40 * mm, 77 * mm, 48 * mm],
+        ),
+        Spacer(1, 7 * mm),
+        P("Internal controls checklist", "SubTitle"),
+        bullet_list(
+            [
+                "Record a named owner for each client segment and each quarterly deadline.",
+                "Use internal action dates that are earlier than HMRC deadlines.",
+                "Keep evidence of client approval before submission.",
+                "Track software authorisation, agent role and sign-up status separately.",
+                "Escalate late or incomplete records before the deadline week.",
+                "Build a standard query process for uncategorised items, private expenses and missing bank transactions.",
+            ]
+        ),
         PageBreak(),
         P("How Sarmad Global supports practices", "SectionTitle"),
         P("Sarmad Global can assist practices that need operational support, software workflow design or temporary technical capacity while MTD is implemented."),
@@ -533,10 +662,6 @@ def practice_story():
             ]
         ),
         PageBreak(),
-        P("Make this guide your own", "SectionTitle"),
-        P("Enter your practice details below before sharing this document internally or with team members. The guide should be adapted to your practice systems, engagement terms, quality-control policies and client service model."),
-        FirmDetailsForm("practice"),
-        Spacer(1, 8 * mm),
         callout("For help implementing MTD workflows, cleaning client data, choosing software routes or building practice automation, contact Sarmad Global: sarmad.accountant@yahoo.com | 020 8646 3666 | sarmadglobal.finaccord.pro", GREEN),
         PageBreak(),
         P("HMRC sources used", "SectionTitle"),
@@ -569,11 +694,16 @@ def copy_to_downloads(path):
 
 def build():
     os.makedirs(SITE_DOWNLOADS, exist_ok=True)
-    build_pdf(CLIENT_PDF, "Sarmad Global MTD Client Guide", "Sarmad Global", client_story())
-    build_pdf(PRACTICE_PDF, "Sarmad Global MTD Practice Guide", "Sarmad Global", practice_story())
+    build_pdf(CLIENT_PDF, "Sarmad Global MTD Public Client Guide", "Sarmad Global", public_client_story())
+    build_pdf(WHITE_LABEL_PDF, "White Label MTD Client Guide for Practices", "Sarmad Global", white_label_client_story())
+    build_pdf(PRACTICE_PDF, "Sarmad Global MTD Practice Implementation Guide", "Sarmad Global", practice_story())
+    shutil.copy2(PRACTICE_PDF, LEGACY_PRACTICE_PDF)
     copy_to_downloads(CLIENT_PDF)
+    copy_to_downloads(WHITE_LABEL_PDF)
     copy_to_downloads(PRACTICE_PDF)
+    copy_to_downloads(LEGACY_PRACTICE_PDF)
     print(CLIENT_PDF)
+    print(WHITE_LABEL_PDF)
     print(PRACTICE_PDF)
 
 

@@ -790,6 +790,25 @@ a:hover {
     font-size: 0.92rem;
 }
 
+.mtd-hero,
+.mtd-download-band,
+.mtd-summary-grid,
+.mtd-support-panel,
+.mtd-link-grid,
+.resource-card {
+    min-width: 0;
+}
+
+.mtd-hero h1,
+.mtd-summary-grid h2,
+.mtd-download-band h2,
+.mtd-download-band h3,
+.mtd-download-band p,
+.mtd-download-band li,
+.mtd-link-grid a {
+    overflow-wrap: break-word;
+}
+
 /* Strategic Grid Sections */
 .bg-dark-section {
     background-color: var(--clr-primary-dark);
@@ -1164,6 +1183,10 @@ footer a:hover {
 
 @media (max-width: 768px) {
     h1 { font-size: 1.75rem; overflow-wrap: break-word; }
+    .container {
+        padding-left: var(--spacing-sm);
+        padding-right: var(--spacing-sm);
+    }
     .grid-2, .grid-3, .grid-4 {
         grid-template-columns: 1fr;
     }
@@ -1226,7 +1249,22 @@ footer a:hover {
         max-width: 340px;
     }
     .mtd-hero h1 {
-        max-width: 340px;
+        max-width: 100%;
+    }
+    .mtd-hero .lead,
+    .mtd-summary-grid p,
+    .section-heading p,
+    .resource-card p,
+    .clean-list li {
+        max-width: 100%;
+    }
+    .resource-card {
+        min-height: auto;
+        padding: var(--spacing-md);
+    }
+    .resource-card .btn {
+        width: 100%;
+        white-space: normal;
     }
     .footer-grid { grid-template-columns: 1fr; }
     .header-top .container { flex-direction: column; gap: var(--spacing-xs); text-align: center; }
