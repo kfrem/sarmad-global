@@ -469,6 +469,144 @@ a:hover {
     height: 20px;
 }
 
+/* MTD Resource Promotion */
+.section-kicker,
+.resource-type {
+    display: inline-block;
+    color: var(--clr-accent-gold);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--spacing-xs);
+    text-transform: uppercase;
+}
+
+.mtd-banner {
+    background: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    padding: var(--spacing-lg) 0;
+}
+
+.mtd-banner-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
+    gap: var(--spacing-lg);
+    align-items: center;
+}
+
+.mtd-banner h2 {
+    margin-bottom: var(--spacing-sm);
+}
+
+.mtd-banner p {
+    font-size: 1.05rem;
+    margin-bottom: 0;
+    max-width: 780px;
+}
+
+.mtd-banner-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.btn-outline-dark {
+    background-color: transparent;
+    color: var(--clr-primary-dark);
+    border: 1px solid var(--clr-accent-gold);
+}
+
+.btn-outline-dark:hover {
+    background-color: var(--clr-primary-dark);
+    color: var(--clr-text-light);
+    transform: translateY(-2px);
+}
+
+.mtd-resource-section {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.section-heading {
+    max-width: 840px;
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-heading h2 {
+    margin-bottom: var(--spacing-sm);
+}
+
+.section-heading p {
+    font-size: 1.05rem;
+}
+
+.resource-card {
+    min-height: 420px;
+    background-color: var(--clr-bg-light);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+}
+
+.resource-card h3 {
+    font-size: 1.55rem;
+}
+
+.resource-card-dark {
+    background-color: var(--clr-secondary-dark);
+    border-color: var(--clr-border);
+}
+
+.resource-card-dark h3,
+.resource-card-dark p,
+.resource-card-dark .clean-list li {
+    color: var(--clr-text-light);
+}
+
+.clean-list {
+    list-style: none;
+    margin: var(--spacing-sm) 0 var(--spacing-md) 0;
+}
+
+.clean-list li {
+    color: var(--clr-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 0.65rem;
+    padding-left: 1.2rem;
+    position: relative;
+}
+
+.clean-list li::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    background-color: var(--clr-accent-gold);
+    border-radius: 50%;
+    left: 0;
+    position: absolute;
+    top: 0.7rem;
+}
+
+.mtd-help-strip {
+    align-items: center;
+    background-color: rgba(212, 175, 55, 0.08);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    display: grid;
+    gap: var(--spacing-sm);
+    grid-template-columns: auto 1fr auto;
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+}
+
+.mtd-help-strip span {
+    color: var(--clr-text-muted);
+}
+
 /* Strategic Grid Sections */
 .bg-dark-section {
     background-color: var(--clr-primary-dark);
@@ -827,6 +965,10 @@ footer a:hover {
     .nav-accreditation-acca img { width: 52px; height: 52px; }
     .hero-split { flex-direction: column; }
     .hero-half { padding: var(--spacing-lg) var(--spacing-md); }
+    .mtd-banner-content,
+    .mtd-help-strip {
+        grid-template-columns: 1fr;
+    }
     .footer-grid { grid-template-columns: 1fr 1fr; }
 }
 
