@@ -1157,6 +1157,16 @@ footer a:hover {
 }
 
 /* Mobile Responsive Adjustments */
+@media (max-width: 1100px) {
+    .announcement-track {
+        white-space: normal;
+    }
+    .announcement-track span {
+        overflow: visible;
+        text-overflow: clip;
+    }
+}
+
 @media (max-width: 992px) {
     h1 { font-size: 2.2rem; }
     h2 { font-size: 1.7rem; }
