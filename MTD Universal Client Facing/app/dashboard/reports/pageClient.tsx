@@ -136,6 +136,7 @@ export default function ReportsPage() {
       // 2. Fetch Bank Lines
       const { data: bankData } = await supabase
         .from('bank_lines')
+        .select('*')
         .gte('date', start)
         .lte('date', end);
       
@@ -144,6 +145,7 @@ export default function ReportsPage() {
       // 3. Fetch Orphan Documents
       const { data: docData } = await supabase
         .from('documents')
+        .select('*')
         .eq('status', 'pending')
         .gte('uploaded_at', `${start}T00:00:00Z`)
         .lte('uploaded_at', `${end}T23:59:59Z`);
