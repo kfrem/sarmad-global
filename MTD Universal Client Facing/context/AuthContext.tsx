@@ -148,12 +148,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const refreshAuth = async () => {
-    setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    const currentUser = session?.user || null;
-    setUser(currentUser);
-    await loadUserData(currentUser);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      await loadUserData(currentUser);
+    } catch (err) {
+      console.error('Error in refreshAuth:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -163,10 +168,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Listen to changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: any, session: any) => {
-        const currentUser = session?.user || null;
-        setUser(currentUser);
-        await loadUserData(currentUser);
-        setLoading(false);
+        try {
+          const currentUser = session?.user || null;
+          setUser(currentUser);
+          await loadUserData(currentUser);
+        } catch (err) {
+          console.error('Error in auth state change:', err);
+        } finally {
+          setLoading(false);
+        }
 
         if (event === 'SIGNED_OUT') {
           router.push('/login');
