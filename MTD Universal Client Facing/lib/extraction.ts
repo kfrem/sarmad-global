@@ -112,7 +112,7 @@ export async function extractDocument(
   if (mode === 'vision') {
     // vision model mode using Gemini API
     const apiKey = process.env.GEMINI_API_KEY;
-    const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
     if (!apiKey) {
       console.warn('GEMINI_API_KEY is not defined. Falling back to manual mode.');
@@ -227,7 +227,7 @@ Instructions:
     const rawText = fileBuffer.toString('utf-8').slice(0, 10000); // Take first 10k characters
     
     const apiKey = process.env.GEMINI_API_KEY;
-    const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is not defined.');

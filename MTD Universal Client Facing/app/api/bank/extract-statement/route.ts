@@ -223,7 +223,7 @@ function parseCsvLocally(csvText: string): any[] {
 
 // Gemini statement parser
 async function parseStatementWithGemini(data: string, mimeType: string, apiKey: string): Promise<any[]> {
-  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const prompt = `You are a professional UK bookkeeping system. Extract all bank transactions from this bank statement.
