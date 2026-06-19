@@ -41,6 +41,7 @@ export default function BankReconciliationPage() {
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [csvRows, setCsvRows] = useState<string[][]>([]);
   const [importing, setImporting] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
   
   // CSV Mappings
   const [dateCol, setDateCol] = useState<string>('');
@@ -186,74 +187,238 @@ export default function BankReconciliationPage() {
     }
   }, [selectedLineId, availableReceipts]);
 
-  // CSV Parsing
-  const handleCsvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // CSV / PDF / ZIP Bank Statement Import Handler
+  const handleStatementFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setCsvFile(file);
+    if (!file || !company) return;
+
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    
+    // Set file state for fallback display
+    setCsvFile(file);
+    setStatusMsg('Analysing file...');
+
+    // Helper: read file as Base64 for server upload
+    const readFileAsBase64 = (f: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result as string);
+        r.onerror = (err) => reject(err);
+        r.readAsDataURL(f);
+      });
+    };
+
+    if (fileExt === 'csv') {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const text = event.target?.result as string;
         const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
         if (lines.length > 0) {
-          // Parse CSV rows simple split
           const rows = lines.map((line) => {
-            // Match commas but respect quotes
             const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
             return matches.map((m) => m.replace(/^"|"$/g, '').trim());
           });
-          
+
           setCsvHeaders(rows[0]);
           setCsvRows(rows.slice(1));
-          
+
           // Auto-guess columns
+          let guessedDate = '';
+          let guessedDesc = '';
+          let guessedMoneyOut = '';
+          let guessedMoneyIn = '';
+          let guessedAmount = '';
+          let guessedBalance = '';
+
           rows[0].forEach((header) => {
             const h = header.toLowerCase();
-            if (h.includes('date')) setDateCol(header);
-            else if (h.includes('desc') || h.includes('detail') || h.includes('narrative')) setDescCol(header);
-            else if (h.includes('out') || h.includes('debit') || h.includes('paid out')) setMoneyOutCol(header);
-            else if (h.includes('in') || h.includes('credit') || h.includes('paid in')) setMoneyInCol(header);
-            else if (h.includes('balance')) setBalanceCol(header);
+            if (h.includes('date')) guessedDate = header;
+            else if (h.includes('desc') || h.includes('detail') || h.includes('narrative') || h.includes('memo') || h.includes('transaction')) guessedDesc = header;
+            else if (h.includes('out') || h.includes('debit') || h.includes('spent') || h.includes('withdraw')) guessedMoneyOut = header;
+            else if (h.includes('in') || h.includes('credit') || h.includes('received') || h.includes('deposit')) guessedMoneyIn = header;
+            else if (h.includes('amount') || h.includes('value')) guessedAmount = header;
+            else if (h.includes('balance')) guessedBalance = header;
           });
+
+          if (!guessedMoneyOut && !guessedMoneyIn && guessedAmount) {
+            guessedMoneyOut = guessedAmount;
+            guessedMoneyIn = guessedAmount;
+          }
+
+          if (guessedDate) setDateCol(guessedDate);
+          if (guessedDesc) setDescCol(guessedDesc);
+          if (guessedMoneyOut) setMoneyOutCol(guessedMoneyOut);
+          if (guessedMoneyIn) setMoneyInCol(guessedMoneyIn);
+          if (guessedBalance) setBalanceCol(guessedBalance);
+
+          // If we successfully auto-guessed Date, Description and at least one money column,
+          // perform the import automatically without asking the user!
+          if (guessedDate && guessedDesc && (guessedMoneyOut || guessedMoneyIn)) {
+            setStatusMsg('Auto-detected columns! Importing bank statement lines...');
+            setTimeout(() => {
+              performAutoImport(rows[0], rows.slice(1), {
+                dateCol: guessedDate,
+                descCol: guessedDesc,
+                moneyOutCol: guessedMoneyOut,
+                moneyInCol: guessedMoneyIn,
+                balanceCol: guessedBalance,
+                currentFile: file
+              });
+            }, 800);
+          } else {
+            // Auto-detect failed. Send CSV base64 to server API for Gemini / local regex parsing
+            setImporting(true);
+            setStatusMsg(`AI Statement Reader: Extracting lines from complex CSV ${file.name}...`);
+            try {
+              const base64Data = await readFileAsBase64(file);
+              
+              const response = await fetch('/api/bank/extract-statement', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  fileBase64: base64Data,
+                  filename: file.name,
+                  mimeType: file.type,
+                  companyId: company.id,
+                }),
+              });
+
+              if (!response.ok) {
+                const errJson = await response.json();
+                throw new Error(errJson.error || 'Failed to extract bank statement');
+              }
+
+              const resData = await response.json();
+              setStatusMsg(`Success! Automatically imported ${resData.count} transactions from ${file.name}.`);
+              
+              setTimeout(() => {
+                setCsvFile(null);
+                setCsvHeaders([]);
+                setCsvRows([]);
+                setStatusMsg('');
+                setActiveTab('reconcile');
+                loadBankLines();
+              }, 2000);
+
+            } catch (err: any) {
+              console.error(err);
+              setStatusMsg(`Error: ${err.message || 'Failed to process statement.'}`);
+              alert(`Failed to parse bank statement: ${err.message}`);
+            } finally {
+              setImporting(false);
+            }
+          }
         }
       };
       reader.readAsText(file);
+    } else if (fileExt === 'pdf' || fileExt === 'zip') {
+      // PDF or ZIP: Upload to server for Gemini / ADM-Zip parsing
+      setImporting(true);
+      setStatusMsg(`AI Statement Reader: Extracting lines from ${file.name}...`);
+      try {
+        const base64Data = await readFileAsBase64(file);
+        
+        const response = await fetch('/api/bank/extract-statement', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileBase64: base64Data,
+            filename: file.name,
+            mimeType: file.type,
+            companyId: company.id,
+          }),
+        });
+
+        if (!response.ok) {
+          const errJson = await response.json();
+          throw new Error(errJson.error || 'Failed to extract bank statement');
+        }
+
+        const resData = await response.json();
+        setStatusMsg(`Success! Automatically imported ${resData.count} transactions from ${file.name}.`);
+        
+        setTimeout(() => {
+          setCsvFile(null);
+          setCsvHeaders([]);
+          setCsvRows([]);
+          setStatusMsg('');
+          setActiveTab('reconcile');
+          loadBankLines();
+        }, 2000);
+
+      } catch (err: any) {
+        console.error(err);
+        setStatusMsg(`Error: ${err.message || 'Failed to process statement.'}`);
+        alert(`Failed to parse bank statement: ${err.message}`);
+      } finally {
+        setImporting(false);
+      }
+    } else {
+      setStatusMsg(`Error: Unsupported file format ${fileExt}. Please select a CSV, PDF, or ZIP.`);
+      alert('Unsupported file format. Please upload a CSV, PDF, or ZIP containing your statement.');
     }
   };
 
-  const handleImportCsv = async () => {
-    if (!company || csvRows.length === 0 || !dateCol || !descCol) {
-      alert('Please select date and description columns.');
-      return;
+  const performAutoImport = async (
+    headers: string[],
+    rows: string[][],
+    mappings: {
+      dateCol: string;
+      descCol: string;
+      moneyOutCol: string;
+      moneyInCol: string;
+      balanceCol: string;
+      currentFile?: File;
     }
-
+  ) => {
+    if (!company) return;
     setImporting(true);
     try {
-      const dateIdx = csvHeaders.indexOf(dateCol);
-      const descIdx = csvHeaders.indexOf(descCol);
-      const outIdx = csvHeaders.indexOf(moneyOutCol);
-      const inIdx = csvHeaders.indexOf(moneyInCol);
-      const balIdx = csvHeaders.indexOf(balanceCol);
+      const dateIdx = headers.indexOf(mappings.dateCol);
+      const descIdx = headers.indexOf(mappings.descCol);
+      const outIdx = headers.indexOf(mappings.moneyOutCol);
+      const inIdx = headers.indexOf(mappings.moneyInCol);
+      const balIdx = headers.indexOf(mappings.balanceCol);
 
       const importedLines = [];
 
-      for (const row of csvRows) {
+      for (const row of rows) {
         if (!row[dateIdx] || !row[descIdx]) continue;
 
-        // Parse date. UK format standard DD/MM/YYYY
+        // Parse date
         let dateStr = row[dateIdx];
         if (dateStr.includes('/')) {
           const parts = dateStr.split('/');
-          if (parts[2].length === 4) {
-            // DD/MM/YYYY -> YYYY-MM-DD
+          if (parts[2] && parts[2].length === 4) {
             dateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
           }
         }
 
         const desc = row[descIdx];
-        const outAmt = outIdx >= 0 ? Math.abs(parseFloat(row[outIdx].replace(/[^0-9.-]/g, ''))) || 0 : 0;
-        const inAmt = inIdx >= 0 ? parseFloat(row[inIdx].replace(/[^0-9.-]/g, '')) || 0 : 0;
-        const balance = balIdx >= 0 ? parseFloat(row[balIdx].replace(/[^0-9.-]/g, '')) || null : null;
+        let outAmt = 0;
+        let inAmt = 0;
+
+        if (outIdx >= 0 && inIdx >= 0 && outIdx === inIdx) {
+          // Single Amount column
+          const val = parseFloat(row[outIdx].replace(/[^0-9.-]/g, '')) || 0;
+          if (val < 0) {
+            outAmt = Math.abs(val);
+            inAmt = 0;
+          } else {
+            outAmt = 0;
+            inAmt = val;
+          }
+        } else {
+          // Separate columns
+          outAmt = outIdx >= 0 && row[outIdx] ? Math.abs(parseFloat(row[outIdx].replace(/[^0-9.-]/g, ''))) || 0 : 0;
+          inAmt = inIdx >= 0 && row[inIdx] ? parseFloat(row[inIdx].replace(/[^0-9.-]/g, '')) || 0 : 0;
+        }
+
+        const balance = balIdx >= 0 && row[balIdx] ? parseFloat(row[balIdx].replace(/[^0-9.-]/g, '')) || null : null;
 
         importedLines.push({
           company_id: company.id,
@@ -269,18 +434,46 @@ export default function BankReconciliationPage() {
       const { error } = await supabase.from('bank_lines').insert(importedLines);
       if (error) throw error;
 
-      alert(`Successfully imported ${importedLines.length} bank statement lines.`);
-      setCsvFile(null);
-      setCsvHeaders([]);
-      setCsvRows([]);
-      setActiveTab('reconcile');
-      loadBankLines();
+      setStatusMsg(`Successfully imported ${importedLines.length} bank statement lines!`);
+      
+      // Write audit log
+      await supabase.from('audit_log').insert({
+        company_id: company.id,
+        action: 'extract_bank_statement',
+        entity: 'bank_lines',
+        before: { filename: mappings.currentFile?.name || csvFile?.name || 'CSV File' },
+        after: { imported_count: importedLines.length, method: 'client-auto' },
+      });
+
+      setTimeout(() => {
+        setCsvFile(null);
+        setCsvHeaders([]);
+        setCsvRows([]);
+        setStatusMsg('');
+        setActiveTab('reconcile');
+        loadBankLines();
+      }, 1500);
 
     } catch (err: any) {
-      alert(`Error importing CSV: ${err.message}`);
+      alert(`Error importing: ${err.message}`);
+      setStatusMsg(`Error: ${err.message}`);
     } finally {
       setImporting(false);
     }
+  };
+
+  const handleImportCsv = async () => {
+    if (!csvFile || !company || csvRows.length === 0 || !dateCol || !descCol) {
+      alert('Please configure date and description columns.');
+      return;
+    }
+    await performAutoImport(csvHeaders, csvRows, {
+      dateCol,
+      descCol,
+      moneyOutCol,
+      moneyInCol,
+      balanceCol
+    });
   };
 
   // Add Manual Statement Line
@@ -694,19 +887,28 @@ export default function BankReconciliationPage() {
       {activeTab === 'import' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '32px' }}>
           <div className="card">
-            <h3>Import Bank Statement (CSV)</h3>
-            <p className="input-label" style={{ marginTop: '4px' }}>Load statement transactions from your banking provider.</p>
+            <h3>Import Bank Statement</h3>
+            <p className="input-label" style={{ marginTop: '4px' }}>Load statement transactions from your banking provider (CSV, PDF, or ZIP containing them).</p>
 
             <div style={{ marginTop: '24px' }}>
               <input
                 type="file"
-                accept=".csv"
-                onChange={handleCsvChange}
+                accept=".csv,application/pdf,application/zip,application/x-zip-compressed"
+                onChange={handleStatementFileChange}
                 style={{ marginBottom: '16px' }}
                 disabled={importing}
               />
               
-              {csvFile && (
+              {statusMsg && (
+                <div
+                  className={`badge badge-${statusMsg.toLowerCase().includes('error') ? 'danger' : 'success'}`}
+                  style={{ width: '100%', padding: '12px', marginBottom: '16px', display: 'block', textAlign: 'center' }}
+                >
+                  {statusMsg}
+                </div>
+              )}
+              
+              {csvFile && csvHeaders.length > 0 && (
                 <>
                   <p className="input-label" style={{ marginTop: '16px' }}>Configure CSV Column Mapping</p>
                   
