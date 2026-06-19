@@ -10,8 +10,9 @@ export default function DocumentUploadPage() {
   const [docType, setDocType] = useState<'invoice' | 'receipt' | 'bank_statement' | 'other'>('receipt');
   const [period, setPeriod] = useState('');
   const [extractionMode, setExtractionMode] = useState<'vision' | 'hybrid' | 'manual'>('vision');
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
+  const [dragActive, setDragActive] = useState(false);
   
   const [statusMsg, setStatusMsg] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -37,14 +38,47 @@ export default function DocumentUploadPage() {
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      if (selectedFile.type.startsWith('image/')) {
-        setFilePreview(URL.createObjectURL(selectedFile));
-      } else {
-        setFilePreview(null); // PDF or CSV
-      }
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      const newFiles = Array.from(selectedFiles);
+      setFiles(prev => [...prev, ...newFiles]);
+      
+      const newPreviews = newFiles.map(file => {
+        if (file.type.startsWith('image/')) {
+          return URL.createObjectURL(file);
+        }
+        return '';
+      });
+      setFilePreviews(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      setFiles(prev => [...prev, ...droppedFiles]);
+      
+      const newPreviews = droppedFiles.map(file => {
+        if (file.type.startsWith('image/')) {
+          return URL.createObjectURL(file);
+        }
+        return '';
+      });
+      setFilePreviews(prev => [...prev, ...newPreviews]);
     }
   };
 
@@ -100,89 +134,99 @@ export default function DocumentUploadPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !company) return;
+    if (files.length === 0 || !company) return;
 
     setUploading(true);
-    setStatusMsg('Compressing image if required...');
-    setProgress(10);
+    setProgress(0);
 
     try {
-      let uploadPayload: Blob | File = file;
+      const totalFiles = files.length;
+      for (let i = 0; i < totalFiles; i++) {
+        const currentFile = files[i];
+        const fileNumText = `[File ${i + 1} of ${totalFiles}]`;
+        const baseProgress = (i / totalFiles) * 100;
+        const stepProgress = 100 / totalFiles;
 
-      // Only compress image uploads, bypass PDF and CSV
-      if (file.type.startsWith('image/')) {
-        try {
-          uploadPayload = await compressImage(file);
-        } catch (err) {
-          console.warn('Compression failed, uploading original file:', err);
+        setStatusMsg(`${fileNumText} Compressing ${currentFile.name}...`);
+        setProgress(Math.round(baseProgress + stepProgress * 0.1));
+
+        let uploadPayload: Blob | File = currentFile;
+
+        // Only compress image uploads, bypass PDF and CSV
+        if (currentFile.type.startsWith('image/')) {
+          try {
+            uploadPayload = await compressImage(currentFile);
+          } catch (err) {
+            console.warn('Compression failed, uploading original file:', err);
+          }
         }
-      }
 
-      setProgress(30);
-      setStatusMsg('Uploading file to secure storage...');
+        setStatusMsg(`${fileNumText} Uploading ${currentFile.name}...`);
+        setProgress(Math.round(baseProgress + stepProgress * 0.4));
 
-      const fileExt = file.name.split('.').pop();
-      const uniqueId = crypto.randomUUID();
-      const storagePath = `${company.id}/${uniqueId}/${file.name}`;
+        const uniqueId = crypto.randomUUID();
+        const storagePath = `${company.id}/${uniqueId}/${currentFile.name}`;
 
-      // 1. Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(storagePath, uploadPayload, {
-          contentType: file.type,
-          upsert: true
+        // 1. Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(storagePath, uploadPayload, {
+            contentType: currentFile.type,
+            upsert: true
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        setStatusMsg(`${fileNumText} Saving database reference...`);
+        setProgress(Math.round(baseProgress + stepProgress * 0.6));
+
+        // 2. Insert record in `documents` table
+        const { data: docRecord, error: docError } = await supabase
+          .from('documents')
+          .insert({
+            id: uniqueId,
+            company_id: company.id,
+            type: docType,
+            filename: currentFile.name,
+            storage_path: storagePath,
+            period: period,
+            status: 'pending',
+            archived: false,
+          })
+          .select()
+          .single();
+
+        if (docError || !docRecord) {
+          throw new Error(docError?.message || 'Failed to save document metadata.');
+        }
+
+        setStatusMsg(`${fileNumText} Analysing with AI Extraction...`);
+        setProgress(Math.round(baseProgress + stepProgress * 0.8));
+
+        // 3. Trigger extraction API
+        const response = await fetch('/api/extract', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            documentId: docRecord.id,
+            companyId: company.id,
+            mode: extractionMode,
+          }),
         });
 
-      if (uploadError) {
-        throw uploadError;
+        if (!response.ok) {
+          const errJson = await response.json();
+          throw new Error(errJson.error || 'API Extraction failed');
+        }
+
+        setProgress(Math.round(baseProgress + stepProgress));
       }
 
-      setProgress(60);
-      setStatusMsg('Saving document reference in database...');
-
-      // 2. Insert record in `documents` table
-      const { data: docRecord, error: docError } = await supabase
-        .from('documents')
-        .insert({
-          id: uniqueId,
-          company_id: company.id,
-          type: docType,
-          filename: file.name,
-          storage_path: storagePath,
-          period: period,
-          status: 'pending',
-          archived: false,
-        })
-        .select()
-        .single();
-
-      if (docError || !docRecord) {
-        throw new Error(docError?.message || 'Failed to save document metadata.');
-      }
-
-      setProgress(80);
-      setStatusMsg('Initiating structural document extraction...');
-
-      // 3. Trigger extraction API
-      const response = await fetch('/api/extract', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          documentId: docRecord.id,
-          companyId: company.id,
-          mode: extractionMode,
-        }),
-      });
-
-      if (!response.ok) {
-        const errJson = await response.json();
-        throw new Error(errJson.error || 'API Extraction failed');
-      }
-
-      setProgress(100);
-      setStatusMsg('Success! Document uploaded and transaction drafts generated.');
+      setStatusMsg('Success! All documents uploaded and transaction drafts generated.');
       
       // Reset form and redirect to review
       setTimeout(() => {
@@ -224,7 +268,7 @@ export default function DocumentUploadPage() {
           transition: border-color var(--transition-fast), background var(--transition-fast);
           min-height: 260px;
         }
-        .upload-zone:hover {
+        .upload-zone:hover, .upload-zone.drag-active {
           border-color: var(--primary);
           background: rgba(var(--company-accent-rgb), 0.02);
         }
@@ -240,24 +284,101 @@ export default function DocumentUploadPage() {
           font-size: 0.85rem;
           color: var(--text-muted);
         }
-        .preview-box {
-          border: 1px solid var(--border-light);
-          border-radius: var(--radius-md);
-          padding: 16px;
+        .file-list-container {
           display: flex;
           flex-direction: column;
+          gap: 12px;
+          margin-top: 16px;
+          max-height: 400px;
+          overflow-y: auto;
+          padding-right: 4px;
+        }
+        .file-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px;
+          border: 1px solid var(--border-light);
+          border-radius: var(--radius-md);
+          background: #ffffff;
+          gap: 16px;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .file-item:hover {
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-sm);
+        }
+        .file-item-info {
+          display: flex;
           align-items: center;
           gap: 12px;
-          background: #ffffff;
+          flex: 1;
+          min-width: 0;
         }
-        .preview-img {
-          max-width: 100%;
-          max-height: 200px;
-          object-fit: contain;
+        .file-item-thumbnail {
+          width: 48px;
+          height: 48px;
+          object-fit: cover;
           border-radius: var(--radius-sm);
+          background: #f1f5f9;
+          border: 1px solid var(--border-light);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.5rem;
+          flex-shrink: 0;
         }
-        .preview-file-icon {
-          font-size: 3.5rem;
+        .file-item-details {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+        .file-item-name {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--text-main);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .file-item-size {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+        }
+        .file-item-remove {
+          background: none;
+          border: none;
+          color: var(--color-danger);
+          font-size: 1.25rem;
+          cursor: pointer;
+          padding: 4px 8px;
+          border-radius: var(--radius-sm);
+          transition: background-color 0.2s;
+        }
+        .file-item-remove:hover {
+          background-color: rgba(239, 68, 68, 0.05);
+        }
+        .add-more-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          padding: 12px;
+          border: 2px dashed var(--border-light);
+          border-radius: var(--radius-md);
+          background: #fdfdfd;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--text-muted);
+          cursor: pointer;
+          transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+          margin-top: 12px;
+        }
+        .add-more-btn:hover {
+          border-color: var(--primary);
+          color: var(--primary);
+          background-color: rgba(var(--company-accent-rgb), 0.01);
         }
         .progress-bar-container {
           margin-top: 20px;
@@ -343,53 +464,80 @@ export default function DocumentUploadPage() {
               onChange={handleFileChange}
               accept="image/jpeg,image/png,image/webp,application/pdf,text/csv"
               style={{ display: 'none' }}
+              multiple
             />
 
-            {!file ? (
-              <div className="upload-zone" onClick={() => fileInputRef.current?.click()}>
+            {files.length === 0 ? (
+              <div 
+                className={`upload-zone ${dragActive ? 'drag-active' : ''}`} 
+                onClick={() => fileInputRef.current?.click()}
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+              >
                 <span className="upload-icon">📤</span>
                 <div className="upload-text">
-                  <h3>Choose a file or drag it here</h3>
+                  <h3>Choose files or drag them here</h3>
                   <p>Supports JPEG, PNG, WEBP, PDF, and CSV up to 50MB</p>
                 </div>
               </div>
             ) : (
-              <div className="preview-box">
-                {filePreview ? (
-                  <img src={filePreview} alt="Preview" className="preview-img" />
-                ) : (
-                  <div className="preview-file-icon">
-                    {file.name.endsWith('.pdf') ? '📄' : file.name.endsWith('.csv') ? '📊' : '📁'}
-                  </div>
-                )}
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>{file.name}</p>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    {(file.size / (1024 * 1024)).toFixed(2)} MB
-                  </p>
+              <div>
+                <div className="file-list-container">
+                  {files.map((file, idx) => {
+                    const preview = filePreviews[idx];
+                    return (
+                      <div className="file-item" key={idx}>
+                        <div className="file-item-info">
+                          {preview ? (
+                            <img src={preview} alt="Thumbnail" className="file-item-thumbnail" />
+                          ) : (
+                            <div className="file-item-thumbnail">
+                              {file.name.endsWith('.pdf') ? '📄' : file.name.endsWith('.csv') ? '📊' : '📁'}
+                            </div>
+                          )}
+                          <div className="file-item-details">
+                            <span className="file-item-name" title={file.name}>{file.name}</span>
+                            <span className="file-item-size">{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="file-item-remove"
+                          onClick={() => {
+                            setFiles(prev => prev.filter((_, i) => i !== idx));
+                            setFilePreviews(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          disabled={uploading}
+                          title="Remove file"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
+                
                 <button
                   type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setFile(null);
-                    setFilePreview(null);
-                  }}
+                  className="add-more-btn"
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                 >
-                  Clear File
+                  ➕ Add More Files
                 </button>
               </div>
             )}
 
-            {file && (
+            {files.length > 0 && (
               <button
                 type="submit"
                 className="btn btn-primary"
                 style={{ width: '100%', marginTop: '24px' }}
                 disabled={uploading}
               >
-                {uploading ? 'Processing...' : 'Upload & Process Document'}
+                {uploading ? 'Processing...' : `Upload & Process ${files.length} Document${files.length > 1 ? 's' : ''}`}
               </button>
             )}
           </form>
