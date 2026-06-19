@@ -135,10 +135,26 @@ function parseCsvLocally(csvText: string): any[] {
   const lines = csvText.split('\n').map(l => l.trim()).filter(Boolean);
   if (lines.length <= 1) return [];
 
-  const rows = lines.map(line => {
-    const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
-    return matches.map(m => m.replace(/^"|"$/g, '').trim());
-  });
+  const splitCsvLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result.map(val => val.replace(/^"|"$/g, '').trim());
+  };
+
+  const rows = lines.map(line => splitCsvLine(line));
 
   const headers = rows[0];
   let dateIdx = -1;
