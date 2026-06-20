@@ -47,21 +47,31 @@ export async function POST(req: NextRequest) {
       let vatAmount = 0;
 
       // VAT logic
-      if (isVatRegistered && tx.vat_rate_code) {
-        // Simple VAT rate mapping
-        let rate = 0;
-        if (tx.vat_rate_code === 'S20') rate = 0.20;
-        else if (tx.vat_rate_code === 'R5') rate = 0.05;
+      if (isVatRegistered) {
+        if (tx.vat_amount !== undefined && tx.vat_amount !== null && !isNaN(Number(tx.vat_amount))) {
+          // Use extracted VAT amount directly (supports mixed VAT rates)
+          vatAmount = Number(tx.vat_amount);
+          net = gross - vatAmount;
+          vatCode = tx.vat_rate_code || 'S20';
+        } else if (tx.vat_rate_code) {
+          // Fallback to back-calculation
+          let rate = 0;
+          if (tx.vat_rate_code === 'S20') rate = 0.20;
+          else if (tx.vat_rate_code === 'R5') rate = 0.05;
 
-        // If VAT is included, back-calculate
-        net = gross / (1 + rate);
-        vatAmount = gross - net;
-        vatCode = tx.vat_rate_code;
+          net = gross / (1 + rate);
+          vatAmount = gross - net;
+          vatCode = tx.vat_rate_code;
+        } else {
+          net = gross;
+          vatAmount = 0;
+          vatCode = 'OS';
+        }
       } else {
-        // Not VAT registered or no code: Net is Gross, VAT is 0
+        // Not VAT registered: Net is Gross, VAT is 0
         net = gross;
         vatAmount = 0;
-        vatCode = isVatRegistered ? 'OS' : undefined; // Default Outside Scope if registered
+        vatCode = undefined;
       }
 
       // Prepare transaction draft record

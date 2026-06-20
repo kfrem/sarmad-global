@@ -132,7 +132,7 @@ export async function extractDocument(
     const base64Data = fileBuffer.toString('base64');
     
     // Construct prompt
-    const prompt = `You are an expert UK bookkeeping system. Extract all transactions from this receipt/invoice.
+    const prompt = `You are an expert UK bookkeeping system. Extract the transaction from this receipt/invoice.
 Return the output strictly in the requested JSON structure.
 
 Context information:
@@ -141,11 +141,17 @@ Here is the list of active account codes you should map to:
 ${JSON.stringify(compactCategories, null, 2)}
 
 Instructions:
-1. Parse the document. Extract the date (format YYYY-MM-DD), merchant name or description, and gross amount in GBP.
-2. Select the best match 'suggested_account_code' from the provided accounts list.
-3. Classify each line as 'income', 'expense', 'asset', 'transfer', 'personal', or 'none'.
-4. Extract the VAT code (e.g. S20 for 20%, R5 for 5%, Z for 0%, E for exempt, OS for outside scope) if present.
-5. Provide a confidence rating between 0.0 and 1.0.`;
+1. One Document = One Transaction: For this receipt/invoice document, you MUST extract it as a single transaction representing the entire document. Do NOT split the invoice/receipt into multiple separate transactions (e.g., do not create separate transactions for different VAT rate lines or different items on the same receipt).
+2. Date: Extract the transaction date (format YYYY-MM-DD).
+3. Gross Amount: Extract the overall total gross amount shown on the document (the final amount paid/payable, e.g. £11.16).
+4. VAT Amount: Extract the actual total VAT amount shown on the invoice/receipt (e.g., £0.81). If no VAT is specified or if the merchant did not charge VAT, set this to 0.
+5. VAT Code: Extract the primary VAT rate code that applies to the majority of the invoice/receipt (e.g., S20 for 20%, R5 for 5%, Z for 0%, E for exempt, OS for outside scope).
+6. Description: 
+   - Provide the supplier/merchant name.
+   - You MUST append a brief breakdown of the items or VAT rates if there are multiple rates or categories on the receipt (e.g. "Lidl Groceries (Breakdown: £6.28 zero-rated, £4.88 standard-rated)"). This helps the client confirm what they see on the invoice.
+7. Classification: Classify the transaction as 'income', 'expense', 'asset', 'transfer', 'personal', or 'none'.
+8. Suggested Account Code: Select the best match 'suggested_account_code' from the provided accounts list.
+9. Provide a confidence rating between 0.0 and 1.0.`;
 
     const requestBody = {
       contents: [
@@ -233,7 +239,7 @@ Instructions:
       throw new Error('GEMINI_API_KEY is not defined.');
     }
 
-    const prompt = `You are a UK bookkeeping system. Extract all transactions from this raw OCR text:
+    const prompt = `You are an expert UK bookkeeping system. Extract the transaction from this raw OCR text:
 ---
 ${rawText}
 ---
@@ -243,11 +249,17 @@ Here is the list of active account codes you should map to:
 ${JSON.stringify(compactCategories, null, 2)}
 
 Instructions:
-1. Parse the text. Extract the date (format YYYY-MM-DD), merchant or description, and gross amount.
-2. Select the best match 'suggested_account_code' from the list.
-3. Classify each line as 'income', 'expense', 'asset', 'transfer', 'personal', or 'none'.
-4. Extract the VAT code if present.
-5. Provide confidence rating.`;
+1. One Document = One Transaction: You MUST extract this receipt/invoice as a single transaction representing the entire document. Do NOT split it into multiple separate transactions (e.g., do not create separate transactions for different VAT rate lines or different items).
+2. Date: Extract the transaction date (format YYYY-MM-DD).
+3. Gross Amount: Extract the overall total gross amount shown on the document (the final amount paid/payable, e.g. £11.16).
+4. VAT Amount: Extract the actual total VAT amount shown on the invoice/receipt (e.g., £0.81). If no VAT is specified, set this to 0.
+5. VAT Code: Extract the primary VAT rate code that applies to the majority of the invoice/receipt (e.g., S20 for 20%, R5 for 5%, Z for 0%, E for exempt, OS for outside scope).
+6. Description: 
+   - Provide the supplier/merchant name.
+   - You MUST append a brief breakdown of the items or VAT rates if there are multiple rates or categories on the receipt (e.g. "Lidl Groceries (Breakdown: £6.28 zero-rated, £4.88 standard-rated)"). This helps the client confirm what they see on the invoice.
+7. Classification: Classify the transaction as 'income', 'expense', 'asset', 'transfer', 'personal', or 'none'.
+8. Suggested Account Code: Select the best match 'suggested_account_code' from the provided accounts list.
+9. Provide a confidence rating between 0.0 and 1.0.`;
 
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
