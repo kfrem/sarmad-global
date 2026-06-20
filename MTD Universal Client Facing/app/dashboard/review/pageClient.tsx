@@ -54,6 +54,7 @@ export default function TransactionReviewPage() {
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [loadingTxs, setLoadingTxs] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const [isSimpleMode, setIsSimpleMode] = useState(true);
   
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [hmrcCategories, setHmrcCategories] = useState<HmrcCategory[]>([]);
@@ -156,6 +157,7 @@ export default function TransactionReviewPage() {
 
   useEffect(() => {
     if (currentTx) {
+      setIsSimpleMode(true);
       // Reset form states
       setGrossInput(currentTx.gross_amount);
       setDateInput(currentTx.date);
@@ -534,6 +536,51 @@ export default function TransactionReviewPage() {
           gap: 16px;
           margin-top: 12px;
         }
+        .simple-summary-card {
+          background: #f8fafc;
+          border: 1px solid var(--border-light);
+          border-radius: var(--radius-lg);
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .summary-field {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .summary-label {
+          font-size: 0.725rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--text-muted);
+          font-weight: 700;
+        }
+        .summary-value-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .summary-value {
+          font-size: 0.95rem;
+          font-weight: 500;
+          color: var(--text-main);
+        }
+        .summary-edit-btn {
+          background: transparent;
+          border: none;
+          color: var(--primary);
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 2px 6px;
+          border-radius: 4px;
+          transition: background 0.2s;
+        }
+        .summary-edit-btn:hover {
+          background: rgba(var(--company-accent-rgb), 0.05);
+        }
       ` }} />
 
       <h1>Review Transactions</h1>
@@ -597,242 +644,327 @@ export default function TransactionReviewPage() {
                   </div>
                 )}
               </div>
-
               {/* Review Form */}
-              <div className="card">
-                <h3 style={{ marginBottom: '16px' }}>Verify Transaction Details</h3>
-
-                {/* Step 1: Date, Description, Amount */}
-                <div className="form-section-title">1. Basic Details</div>
-                <div className="split-row">
-                  <div className="input-group" style={{ marginBottom: '12px' }}>
-                    <label className="input-label">Transaction Date</label>
-                    <input
-                      type="date"
-                      className="input-field"
-                      value={dateInput}
-                      onChange={(e) => setDateInput(e.target.value)}
-                    />
+              {isSimpleMode ? (
+                <div className="card animate-fade-in">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h3 style={{ margin: 0 }}>Review Transaction</h3>
+                    <button
+                      type="button"
+                      className="toggle-btn"
+                      style={{ padding: '6px 12px', fontSize: '0.8rem', border: '1px solid var(--border-light)', width: 'auto', borderRadius: 'var(--radius-md)' }}
+                      onClick={() => setIsSimpleMode(false)}
+                    >
+                      ⚙️ Detailed Mode
+                    </button>
                   </div>
 
-                  <div className="input-group" style={{ marginBottom: '12px' }}>
-                    <label className="input-label">Gross Amount (GBP)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="input-field"
-                      value={grossInput}
-                      onChange={(e) => setGrossInput(Number(e.target.value))}
-                    />
-                  </div>
-                </div>
-
-                <div className="input-group" style={{ marginBottom: '16px' }}>
-                  <label className="input-label">Description / Supplier</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={descInput}
-                    onChange={(e) => setDescInput(e.target.value)}
-                  />
-                </div>
-
-                {/* Step 2: VAT Registered */}
-                {company?.vat_registered && (
-                  <>
-                    <div className="form-section-title">2. VAT Details</div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px' }}>
-                      <input
-                        type="checkbox"
-                        id="vatIncluded"
-                        checked={vatIncluded}
-                        onChange={(e) => setVatIncluded(e.target.checked)}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                      />
-                      <label htmlFor="vatIncluded" style={{ fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
-                        Is UK VAT included in this amount?
-                      </label>
+                  <div className="simple-summary-card">
+                    <div className="summary-field">
+                      <span className="summary-label">Supplier / Description</span>
+                      <div className="summary-value-row">
+                        <span className="summary-value" style={{ fontWeight: 600 }}>{descInput || 'No description'}</span>
+                        <button className="summary-edit-btn" onClick={() => setIsSimpleMode(false)}>Change</button>
+                      </div>
                     </div>
 
-                    {vatIncluded && (
-                      <div className="input-group">
-                        <label className="input-label">VAT Rate Code</label>
-                        <select
-                          className="select-field"
-                          value={vatRate}
-                          onChange={(e) => setVatRate(e.target.value)}
-                        >
-                          <option value="S20">Standard 20% (S20)</option>
-                          <option value="R5">Reduced 5% (R5)</option>
-                          <option value="Z">Zero Rated 0% (Z)</option>
-                          <option value="E">Exempt (E)</option>
-                          <option value="OS">Outside Scope (OS)</option>
-                        </select>
+                    <div className="summary-field" style={{ borderTop: '1px solid var(--border-light)', paddingTop: '12px' }}>
+                      <span className="summary-label">Transaction Date</span>
+                      <div className="summary-value-row">
+                        <span className="summary-value">
+                          {dateInput ? new Date(dateInput).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'No date'}
+                        </span>
+                        <button className="summary-edit-btn" onClick={() => setIsSimpleMode(false)}>Change</button>
                       </div>
-                    )}
-                  </>
-                )}
+                    </div>
 
-                {/* Step 3: Classification */}
-                <div className="form-section-title">3. Account Classification</div>
-                <div className="input-group">
-                  <label className="input-label">Select Classification Type</label>
-                  <select
-                    className="select-field"
-                    value={classification}
-                    onChange={(e: any) => setClassification(e.target.value)}
-                  >
-                    <option value="expense">Business Expense</option>
-                    <option value="income">Business Income</option>
-                    <option value="asset">Asset purchase</option>
-                    <option value="transfer">Transfer between bank accounts</option>
-                    <option value="personal">Personal / Drawings (Wholly Private)</option>
-                    <option value="none">None / Ignore this item</option>
-                  </select>
-                </div>
+                    <div className="summary-field" style={{ borderTop: '1px solid var(--border-light)', paddingTop: '12px' }}>
+                      <span className="summary-label">Total Amount</span>
+                      <div className="summary-value-row">
+                        <span className="summary-value" style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                          £{grossInput.toFixed(2)}
+                        </span>
+                        <button className="summary-edit-btn" onClick={() => setIsSimpleMode(false)}>Change</button>
+                      </div>
+                    </div>
 
-                {/* Landlord Property Tagging */}
-                {company?.entity_type === 'landlord' && (classification === 'expense' || classification === 'income') && (
-                  <div className="input-group" style={{ marginTop: '12px' }}>
-                    <label className="input-label">Associate to Property</label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      placeholder="e.g. 12 High Street Flat A"
-                      value={propertyId}
-                      onChange={(e) => setPropertyId(e.target.value)}
-                    />
+                    <div className="summary-field" style={{ borderTop: '1px solid var(--border-light)', paddingTop: '12px' }}>
+                      <span className="summary-label">Bookkeeping Category</span>
+                      <div className="summary-value-row">
+                        <span className="summary-value" style={{ fontWeight: 600, color: 'var(--primary)' }}>
+                          {accounts.find(a => a.code === selectedAccountCode)?.name || 'Unassigned / General'}
+                        </span>
+                        <button className="summary-edit-btn" onClick={() => setIsSimpleMode(false)}>Change</button>
+                      </div>
+                    </div>
                   </div>
-                )}
 
-                {/* Step 4: Category System Selection */}
-                {(classification === 'expense' || classification === 'income' || classification === 'asset') && (
-                  <>
-                    <div className="form-section-title">4. Category / Bookkeeping Account</div>
+                  <div style={{ marginTop: '28px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ width: '100%', padding: '16px', fontSize: '1.05rem', fontWeight: 700 }}
+                      onClick={handleConfirm}
+                    >
+                      ✓ Yes, this is correct (Confirm)
+                    </button>
                     
-                    <div className="toggle-container">
-                      <button
-                        type="button"
-                        className={`toggle-btn ${categorySystem === 'coa' ? 'active' : ''}`}
-                        onClick={() => setCategorySystem('coa')}
-                      >
-                        Chart of Accounts
-                      </button>
-                      <button
-                        type="button"
-                        className={`toggle-btn ${categorySystem === 'hmrc' ? 'active' : ''}`}
-                        onClick={() => setCategorySystem('hmrc')}
-                      >
-                        HMRC Tax Categories
-                      </button>
-                    </div>
-
-                    {categorySystem === 'coa' ? (
-                      <div>
-                        <input
-                          type="text"
-                          className="input-field"
-                          placeholder="Search accounts by name or code..."
-                          style={{ marginBottom: '10px' }}
-                          value={accountSearch}
-                          onChange={(e) => setAccountSearch(e.target.value)}
-                        />
-                        <div className="coa-list">
-                          {filteredAccounts.map((acc) => (
-                            <div
-                              key={acc.code}
-                              className={`coa-item ${selectedAccountCode === acc.code ? 'active' : ''}`}
-                              onClick={() => handleAccountChange(acc.code)}
-                            >
-                              <span>{acc.name}</span>
-                              <span style={{ opacity: 0.6 }}>{acc.code}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="input-group">
-                        <label className="input-label">Select HMRC Tax Heading</label>
-                        <select
-                          className="select-field"
-                          value={selectedHmrcId || ''}
-                          onChange={(e) => handleHmrcChange(e.target.value)}
-                        >
-                          <option value="">-- Select category --</option>
-                          {hmrcCategories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Step 5: Business vs Private Split */}
-                <div className="form-section-title">5. Business or Private Portion</div>
-                <div className="input-group">
-                  <label className="input-label">Expense Allocation</label>
-                  <select
-                    className="select-field"
-                    value={splitType}
-                    onChange={(e: any) => {
-                      const val = e.target.value;
-                      setSplitType(val);
-                      if (val === 'wholly_business') {
-                        setBusinessPercent(100);
-                        setBusinessAmount(grossInput);
-                      } else if (val === 'wholly_private') {
-                        setBusinessPercent(0);
-                        setBusinessAmount(0);
-                      } else {
-                        setBusinessPercent(50);
-                        setBusinessAmount(Number((grossInput * 0.5).toFixed(2)));
-                      }
-                    }}
-                  >
-                    <option value="wholly_business">Wholly Business (100%)</option>
-                    <option value="wholly_private">Wholly Private (0% - drawings)</option>
-                    <option value="part_private">Part Private Split (split percentage)</option>
-                  </select>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid var(--border-light)' }}
+                      onClick={() => setIsSimpleMode(false)}
+                    >
+                      ✏️ No, change details / split expense
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                <div className="card animate-fade-in">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 style={{ margin: 0 }}>Detailed Verification</h3>
+                    <button
+                      type="button"
+                      className="toggle-btn active"
+                      style={{ padding: '6px 12px', fontSize: '0.8rem', border: '1px solid var(--border-light)', width: 'auto', borderRadius: 'var(--radius-md)', background: '#ffffff', color: 'var(--primary)' }}
+                      onClick={() => setIsSimpleMode(true)}
+                    >
+                      👁️ Simple Mode
+                    </button>
+                  </div>
 
-                {splitType === 'part_private' && (
-                  <div className="split-row" style={{ marginTop: '0' }}>
-                    <div className="input-group">
-                      <label className="input-label">Business Portion (%)</label>
+                  {/* Step 1: Date, Description, Amount */}
+                  <div className="form-section-title">1. Basic Details</div>
+                  <div className="split-row">
+                    <div className="input-group" style={{ marginBottom: '12px' }}>
+                      <label className="input-label">Transaction Date</label>
                       <input
-                        type="number"
+                        type="date"
                         className="input-field"
-                        value={businessPercent}
-                        onChange={(e) => handlePercentChange(Number(e.target.value))}
+                        value={dateInput}
+                        onChange={(e) => setDateInput(e.target.value)}
                       />
                     </div>
-                    <div className="input-group">
-                      <label className="input-label">Business Amount (GBP)</label>
+
+                    <div className="input-group" style={{ marginBottom: '12px' }}>
+                      <label className="input-label">Gross Amount (GBP)</label>
                       <input
                         type="number"
                         step="0.01"
                         className="input-field"
-                        value={businessAmount}
-                        onChange={(e) => handleAmountChange(Number(e.target.value))}
+                        value={grossInput}
+                        onChange={(e) => setGrossInput(Number(e.target.value))}
                       />
                     </div>
                   </div>
-                )}
 
-                {/* Step 6: Confirmation button */}
-                <div className="form-section-title">6. Save Record</div>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  style={{ width: '100%', padding: '14px', marginTop: '8px' }}
-                  onClick={handleConfirm}
-                >
-                  🔒 Confirm & Lock Transaction
-                </button>
-              </div>
+                  <div className="input-group" style={{ marginBottom: '16px' }}>
+                    <label className="input-label">Description / Supplier</label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={descInput}
+                      onChange={(e) => setDescInput(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Step 2: VAT Registered */}
+                  {company?.vat_registered && (
+                    <>
+                      <div className="form-section-title">2. VAT Details</div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px' }}>
+                        <input
+                          type="checkbox"
+                          id="vatIncluded"
+                          checked={vatIncluded}
+                          onChange={(e) => setVatIncluded(e.target.checked)}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <label htmlFor="vatIncluded" style={{ fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
+                          Is UK VAT included in this amount?
+                        </label>
+                      </div>
+
+                      {vatIncluded && (
+                        <div className="input-group">
+                          <label className="input-label">VAT Rate Code</label>
+                          <select
+                            className="select-field"
+                            value={vatRate}
+                            onChange={(e) => setVatRate(e.target.value)}
+                          >
+                            <option value="S20">Standard 20% (S20)</option>
+                            <option value="R5">Reduced 5% (R5)</option>
+                            <option value="Z">Zero Rated 0% (Z)</option>
+                            <option value="E">Exempt (E)</option>
+                            <option value="OS">Outside Scope (OS)</option>
+                          </select>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Step 3: Classification */}
+                  <div className="form-section-title">3. Account Classification</div>
+                  <div className="input-group">
+                    <label className="input-label">Select Classification Type</label>
+                    <select
+                      className="select-field"
+                      value={classification}
+                      onChange={(e: any) => setClassification(e.target.value)}
+                    >
+                      <option value="expense">Business Expense</option>
+                      <option value="income">Business Income</option>
+                      <option value="asset">Asset purchase</option>
+                      <option value="transfer">Transfer between bank accounts</option>
+                      <option value="personal">Personal / Drawings (Wholly Private)</option>
+                      <option value="none">None / Ignore this item</option>
+                    </select>
+                  </div>
+
+                  {/* Landlord Property Tagging */}
+                  {company?.entity_type === 'landlord' && (classification === 'expense' || classification === 'income') && (
+                    <div className="input-group" style={{ marginTop: '12px' }}>
+                      <label className="input-label">Associate to Property</label>
+                      <input
+                        type="text"
+                        className="input-field"
+                        placeholder="e.g. 12 High Street Flat A"
+                        value={propertyId}
+                        onChange={(e) => setPropertyId(e.target.value)}
+                      />
+                    </div>
+                  )}
+
+                  {/* Step 4: Category System Selection */}
+                  {(classification === 'expense' || classification === 'income' || classification === 'asset') && (
+                    <>
+                      <div className="form-section-title">4. Category / Bookkeeping Account</div>
+                      
+                      <div className="toggle-container">
+                        <button
+                          type="button"
+                          className={`toggle-btn ${categorySystem === 'coa' ? 'active' : ''}`}
+                          onClick={() => setCategorySystem('coa')}
+                        >
+                          Chart of Accounts
+                        </button>
+                        <button
+                          type="button"
+                          className={`toggle-btn ${categorySystem === 'hmrc' ? 'active' : ''}`}
+                          onClick={() => setCategorySystem('hmrc')}
+                        >
+                          HMRC Tax Categories
+                        </button>
+                      </div>
+
+                      {categorySystem === 'coa' ? (
+                        <div>
+                          <input
+                            type="text"
+                            className="input-field"
+                            placeholder="Search accounts by name or code..."
+                            style={{ marginBottom: '10px' }}
+                            value={accountSearch}
+                            onChange={(e) => setAccountSearch(e.target.value)}
+                          />
+                          <div className="coa-list">
+                            {filteredAccounts.map((acc) => (
+                              <div
+                                key={acc.code}
+                                className={`coa-item ${selectedAccountCode === acc.code ? 'active' : ''}`}
+                                onClick={() => handleAccountChange(acc.code)}
+                              >
+                                <span>{acc.name}</span>
+                                <span style={{ opacity: 0.6 }}>{acc.code}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="input-group">
+                          <label className="input-label">Select HMRC Tax Heading</label>
+                          <select
+                            className="select-field"
+                            value={selectedHmrcId || ''}
+                            onChange={(e) => handleHmrcChange(e.target.value)}
+                          >
+                            <option value="">-- Select category --</option>
+                            {hmrcCategories.map((cat) => (
+                              <option key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Step 5: Business vs Private Split */}
+                  <div className="form-section-title">5. Business or Private Portion</div>
+                  <div className="input-group">
+                    <label className="input-label">Expense Allocation</label>
+                    <select
+                      className="select-field"
+                      value={splitType}
+                      onChange={(e: any) => {
+                        const val = e.target.value;
+                        setSplitType(val);
+                        if (val === 'wholly_business') {
+                          setBusinessPercent(100);
+                          setBusinessAmount(grossInput);
+                        } else if (val === 'wholly_private') {
+                          setBusinessPercent(0);
+                          setBusinessAmount(0);
+                        } else {
+                          setBusinessPercent(50);
+                          setBusinessAmount(Number((grossInput * 0.5).toFixed(2)));
+                        }
+                      }}
+                    >
+                      <option value="wholly_business">Wholly Business (100%)</option>
+                      <option value="wholly_private">Wholly Private (0% - drawings)</option>
+                      <option value="part_private">Part Private Split (split percentage)</option>
+                    </select>
+                  </div>
+
+                  {splitType === 'part_private' && (
+                    <div className="split-row" style={{ marginTop: '0' }}>
+                      <div className="input-group">
+                        <label className="input-label">Business Portion (%)</label>
+                        <input
+                          type="number"
+                          className="input-field"
+                          value={businessPercent}
+                          onChange={(e) => handlePercentChange(Number(e.target.value))}
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label className="input-label">Business Amount (GBP)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="input-field"
+                          value={businessAmount}
+                          onChange={(e) => handleAmountChange(Number(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 6: Confirmation button */}
+                  <div className="form-section-title">6. Save Record</div>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ width: '100%', padding: '14px', marginTop: '8px' }}
+                    onClick={handleConfirm}
+                  >
+                    🔒 Confirm & Lock Transaction
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
